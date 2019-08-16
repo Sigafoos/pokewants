@@ -1,6 +1,7 @@
 package wants
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/Sigafoos/pokewants/gamemaster"

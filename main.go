@@ -10,8 +10,10 @@ import (
 	"github.com/Sigafoos/pokewants/gamemaster"
 	"github.com/Sigafoos/pokewants/handler"
 	"github.com/Sigafoos/pokewants/logger"
+	"github.com/Sigafoos/pokewants/middleware"
 	"github.com/Sigafoos/pokewants/wants"
 
+	"github.com/NYTimes/gziphandler"
 	"github.com/gocraft/dbr"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -32,8 +34,10 @@ func main() {
 	}
 
 	h := handler.New(w)
+	chain := gziphandler.GzipHandler(http.HandlerFunc(h.Handle))
+	chain = middleware.UseJSON(chain)
 
-	http.HandleFunc("/want", h.Handle)
+	http.Handle("/want", chain)
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
