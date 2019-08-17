@@ -12,6 +12,8 @@ import (
 
 const tableName = "wants"
 
+var ErrorPokemonNotFound = fmt.Errorf("Pokemon not found")
+
 type Row struct {
 	User    string
 	Pokemon string
@@ -41,7 +43,6 @@ func (w *Wants) Get(user string) []*pokemongo.Pokemon {
 	var results []Row
 
 	session := w.db.NewSession(w.logger)
-	defer session.Close()
 	session.Begin()
 	session.Select("pokemon").From(tableName).Where("user = ?", user).Load(&results)
 
@@ -63,11 +64,10 @@ func (w *Wants) Add(user, pokemon string) error {
 		return err
 	}
 	if p == nil {
-		return fmt.Errorf("Pokemon '%s' not found", pokemon)
+		return ErrorPokemonNotFound
 	}
 
 	session := w.db.NewSession(w.logger)
-	defer session.Close()
 	tx, err := session.Begin()
 	if err != nil {
 		return err
@@ -79,6 +79,7 @@ func (w *Wants) Add(user, pokemon string) error {
 		Pokemon: pokemon,
 	}
 	_, err = tx.InsertInto(tableName).
+		Columns("user", "pokemon").
 		Record(row).
 		Exec()
 
