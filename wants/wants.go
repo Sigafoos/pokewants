@@ -3,6 +3,7 @@ package wants
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/Sigafoos/pokewants/gamemaster"
 
@@ -12,7 +13,10 @@ import (
 
 const tableName = "wants"
 
-var ErrorPokemonNotFound = fmt.Errorf("Pokemon not found")
+var (
+	ErrorPokemonNotFound = fmt.Errorf("Pokemon not found")
+	ErrorDuplicate       = fmt.Errorf("Want already exists")
+)
 
 type Row struct {
 	User    string
@@ -44,7 +48,10 @@ func (w *Wants) Get(user string) []*pokemongo.Pokemon {
 
 	session := w.db.NewSession(w.logger)
 	session.Begin()
-	session.Select("pokemon").From(tableName).Where("user = ?", user).Load(&results)
+	session.Select("pokemon").
+		From(tableName).
+		Where("user = ?", user).
+		Load(&results)
 
 	var pokemon []*pokemongo.Pokemon
 	for _, row := range results {
@@ -84,6 +91,9 @@ func (w *Wants) Add(user, pokemon string) error {
 		Exec()
 
 	if err != nil {
+		if strings.HasPrefix(err.Error(), "UNIQUE constraint failed") {
+			return ErrorDuplicate
+		}
 		return err
 	}
 

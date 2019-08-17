@@ -82,6 +82,10 @@ func (h *Handler) handlePost(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
+		if err == wants.ErrorDuplicate {
+			w.WriteHeader(http.StatusConflict)
+			return
+		}
 		log.Printf("error adding want: %s\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
