@@ -36,6 +36,7 @@ func main() {
 	h := handler.New(w)
 	chain := gziphandler.GzipHandler(http.HandlerFunc(h.Handle))
 	chain = middleware.UseJSON(chain)
+	chain = middleware.UseAuth(chain)
 
 	http.Handle("/want", chain)
 	port := os.Getenv("PORT")
