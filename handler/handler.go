@@ -30,6 +30,8 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		h.handleGet(w, r)
 	case http.MethodPost:
 		h.handlePost(w, r)
+	case http.MethodDelete:
+		h.handleDelete(w, r)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
@@ -64,7 +66,7 @@ func (h *Handler) handlePost(w http.ResponseWriter, r *http.Request) {
 	var req Request
 	err = json.Unmarshal(b, &req)
 	if err != nil {
-		log.Printf("error unmarshalling request: %s", err)
+		log.Printf("error unmarshalling POST request: %s", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -86,4 +88,37 @@ func (h *Handler) handlePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
+}
+
+func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
+	b, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("error reading DELETE body: %s\n", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	var req Request
+	err = json.Unmarshal(b, &req)
+	if err != nil {
+		log.Printf("error unmarshalling DELETE request: %s", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if req.User == "" || req.Pokemon == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	err = h.want.Delete(req.User, req.Pokemon)
+	if err != nil {
+		if err == wants.ErrorPokemonNotFound {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		log.Printf("error deleting want: %s\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }

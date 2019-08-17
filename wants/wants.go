@@ -91,6 +91,35 @@ func (w *Wants) Add(user, pokemon string) error {
 	return nil
 }
 
+func (w *Wants) Delete(user, pokemon string) error {
+	p, err := w.gm.PokemonByID(pokemon)
+	if err != nil {
+		return err
+	}
+	if p == nil {
+		return ErrorPokemonNotFound
+	}
+
+	session := w.db.NewSession(w.logger)
+	tx, err := session.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.RollbackUnlessCommitted()
+
+	_, err = tx.DeleteFrom(tableName).
+		Where("user = ?", user).
+		Where("pokemon = ?", pokemon).
+		Exec()
+
+	if err != nil {
+		return err
+	}
+
+	tx.Commit()
+	return nil
+}
+
 func (w *Wants) createDB() error {
 	// this *might* be dependent on sqlite?
 	createSQL := `
