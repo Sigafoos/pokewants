@@ -50,7 +50,7 @@ func (w *Wants) Get(user string) []*pokemongo.Pokemon {
 	session.Begin()
 	session.Select("pokemon").
 		From(tableName).
-		Where("user = ?", user).
+		Where("username = ?", user).
 		Load(&results)
 
 	var pokemon []*pokemongo.Pokemon
@@ -86,7 +86,7 @@ func (w *Wants) Add(user, pokemon string) error {
 		Pokemon: pokemon,
 	}
 	_, err = tx.InsertInto(tableName).
-		Columns("user", "pokemon").
+		Columns("username", "pokemon").
 		Record(row).
 		Exec()
 
@@ -118,7 +118,7 @@ func (w *Wants) Delete(user, pokemon string) error {
 	defer tx.RollbackUnlessCommitted()
 
 	_, err = tx.DeleteFrom(tableName).
-		Where("user = ?", user).
+		Where("username = ?", user).
 		Where("pokemon = ?", pokemon).
 		Exec()
 
