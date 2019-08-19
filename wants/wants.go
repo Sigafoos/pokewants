@@ -131,12 +131,11 @@ func (w *Wants) Delete(user, pokemon string) error {
 }
 
 func (w *Wants) createDB() error {
-	// this *might* be dependent on sqlite?
 	createSQL := `
 CREATE TABLE IF NOT EXISTS wants(
-user text NOT NULL,
-pokemon text NOT NULL,
-PRIMARY KEY (user, pokemon)
+username varchar(50) NOT NULL,
+pokemon varchar(100) NOT NULL,
+PRIMARY KEY (username, pokemon)
 )`
 	_, err := w.db.Exec(createSQL)
 	return err

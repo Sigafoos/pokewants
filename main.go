@@ -15,11 +15,16 @@ import (
 
 	"github.com/NYTimes/gziphandler"
 	"github.com/gocraft/dbr"
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/lib/pq"
 )
 
 func main() {
-	db, err := dbr.Open("sqlite3", "file:wants.db", nil)
+	dsn := os.Getenv("DATABASE_URL")
+	if dsn == "" {
+		log.Fatal("no dsn found")
+	}
+
+	db, err := dbr.Open("postgres", dsn, nil)
 	if err != nil {
 		log.Panicln("cannot open database: " + err.Error())
 	}
