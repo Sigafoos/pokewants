@@ -19,8 +19,8 @@ var (
 )
 
 type Row struct {
-	User    string
-	Pokemon string
+	Username string
+	Pokemon  string
 }
 
 type Wants struct {
@@ -82,8 +82,8 @@ func (w *Wants) Add(user, pokemon string) error {
 	defer tx.RollbackUnlessCommitted()
 
 	row := &Row{
-		User:    user,
-		Pokemon: pokemon,
+		Username: user,
+		Pokemon:  pokemon,
 	}
 	_, err = tx.InsertInto(tableName).
 		Columns("username", "pokemon").
