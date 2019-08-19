@@ -3,12 +3,12 @@ package wants
 import (
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/Sigafoos/pokewants/gamemaster"
 
 	"github.com/Sigafoos/pokemongo"
 	"github.com/gocraft/dbr"
+	"github.com/lib/pq"
 )
 
 const tableName = "wants"
@@ -91,8 +91,10 @@ func (w *Wants) Add(user, pokemon string) error {
 		Exec()
 
 	if err != nil {
-		if strings.HasPrefix(err.Error(), "UNIQUE constraint failed") {
-			return ErrorDuplicate
+		if err, ok := err.(*pq.Error); ok {
+			if err.Code == "23505" {
+				return ErrorDuplicate
+			}
 		}
 		return err
 	}
