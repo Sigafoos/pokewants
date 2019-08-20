@@ -24,16 +24,16 @@ type Row struct {
 }
 
 type Wants struct {
-	db     *dbr.Connection
-	logger dbr.EventReceiver
-	gm     *gamemaster.Gamemaster
+	db         *dbr.Connection
+	logger     dbr.EventReceiver
+	Gamemaster *gamemaster.Gamemaster
 }
 
-func New(db *dbr.Connection, logger dbr.EventReceiver, gm *gamemaster.Gamemaster) (*Wants, error) {
+func New(db *dbr.Connection, logger dbr.EventReceiver, gamemaster *gamemaster.Gamemaster) (*Wants, error) {
 	w := &Wants{
-		db:     db,
-		logger: logger,
-		gm:     gm,
+		db:         db,
+		logger:     logger,
+		Gamemaster: gamemaster,
 	}
 	err := w.createDB()
 	if err != nil {
@@ -55,7 +55,7 @@ func (w *Wants) Get(user string) []*pokemongo.Pokemon {
 
 	var pokemon []*pokemongo.Pokemon
 	for _, row := range results {
-		p, err := w.gm.PokemonByID(row.Pokemon)
+		p, err := w.Gamemaster.PokemonByID(row.Pokemon)
 		if err != nil {
 			log.Println(err)
 			continue
@@ -66,7 +66,7 @@ func (w *Wants) Get(user string) []*pokemongo.Pokemon {
 }
 
 func (w *Wants) Add(user, pokemon string) error {
-	p, err := w.gm.PokemonByID(pokemon)
+	p, err := w.Gamemaster.PokemonByID(pokemon)
 	if err != nil {
 		return err
 	}
@@ -104,7 +104,7 @@ func (w *Wants) Add(user, pokemon string) error {
 }
 
 func (w *Wants) Delete(user, pokemon string) error {
-	p, err := w.gm.PokemonByID(pokemon)
+	p, err := w.Gamemaster.PokemonByID(pokemon)
 	if err != nil {
 		return err
 	}
