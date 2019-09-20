@@ -39,11 +39,14 @@ func main() {
 	}
 
 	h := handler.New(w)
-	chain := gziphandler.GzipHandler(http.HandlerFunc(h.Handle))
+	mux := http.NewServeMux()
+	mux.Handle("/want", http.HandlerFunc(h.HandleWant))
+	mux.Handle("/search", http.HandlerFunc(h.HandleSearch))
+
+	chain := gziphandler.GzipHandler(mux)
 	chain = middleware.UseJSON(chain)
 	chain = middleware.UseAuth(chain)
 
-	http.Handle("/want", chain)
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -52,6 +55,7 @@ func main() {
 		Addr:         ":" + port,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
+		Handler:      mux,
 	}
 	fmt.Println("server running on port " + port)
 	fmt.Println(server.ListenAndServe())

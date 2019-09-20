@@ -20,17 +20,26 @@ func New(c *http.Client) *Gamemaster {
 }
 
 func (g *Gamemaster) PokemonByID(ID string) (*pokemongo.Pokemon, error) {
-	if g.gm == nil || time.Since(g.updated) > 24*time.Hour {
-		err := g.update()
-		if err != nil {
-			return nil, err
-		}
+	if err := g.update(); err != nil {
+		return nil, err
 	}
 
 	return g.gm.PokemonByID(ID), nil
 }
 
+func (g *Gamemaster) Pokemon() []pokemongo.Pokemon {
+	if err := g.update(); err != nil {
+		return []pokemongo.Pokemon{}
+	}
+
+	return g.gm.Pokemon
+}
+
 func (g *Gamemaster) update() error {
+	if g.gm != nil && time.Since(g.updated) < 24*time.Hour {
+		return nil
+	}
+
 	resp, err := g.c.Get(gamemasterURL)
 	if err != nil {
 		return err

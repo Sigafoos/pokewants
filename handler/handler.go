@@ -5,8 +5,11 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/Sigafoos/pokewants/wants"
+
+	"github.com/Sigafoos/pokemongo"
 )
 
 type Handler struct {
@@ -24,20 +27,20 @@ func New(want *wants.Wants) *Handler {
 	}
 }
 
-func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) HandleWant(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		h.handleGet(w, r)
+		h.handleWantGet(w, r)
 	case http.MethodPost:
-		h.handlePost(w, r)
+		h.handleWantPost(w, r)
 	case http.MethodDelete:
-		h.handleDelete(w, r)
+		h.handleWantDelete(w, r)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
 }
 
-func (h *Handler) handleGet(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) handleWantGet(w http.ResponseWriter, r *http.Request) {
 	user := r.FormValue("user")
 	if user == "" {
 		w.WriteHeader(http.StatusBadRequest)
@@ -55,7 +58,7 @@ func (h *Handler) handleGet(w http.ResponseWriter, r *http.Request) {
 	w.Write(b)
 }
 
-func (h *Handler) handlePost(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) handleWantPost(w http.ResponseWriter, r *http.Request) {
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		log.Printf("error reading POST body: %s\n", err)
@@ -94,7 +97,7 @@ func (h *Handler) handlePost(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
-func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) handleWantDelete(w http.ResponseWriter, r *http.Request) {
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		log.Printf("error reading DELETE body: %s\n", err)
@@ -125,4 +128,33 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+}
+
+func (h *Handler) HandleSearch(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	name := r.FormValue("name")
+	if name == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	name = strings.ToLower(name)
+
+	var results []pokemongo.Pokemon
+	for _, poke := range h.want.Gamemaster.Pokemon() {
+		if strings.Contains(poke.ID, name) {
+			results = append(results, poke)
+		}
+	}
+
+	b, err := json.Marshal(results)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+
+	w.Write(b)
 }
